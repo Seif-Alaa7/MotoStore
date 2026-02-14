@@ -1,0 +1,214 @@
+﻿@model IEnumerable<Store.Models.Motorcycle>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Home Page";
+    var currentUserId = UserManager.GetUserId(User);
+}
+
+<div class="text-center p-5 mb-4 bg-light rounded-3 shadow-sm" style="background: linear-gradient(45deg, #1e3c72, #2a5298); color: white;">
+    <h1 class="display-4 fw-bold">Welcome to MotoMarket 🏍️</h1>
+    <p class="lead">Find your dream motorcycle from the best showrooms in the World!</p>
+</div>
+
+<div class="container mt-n5" style="position: relative; z-index: 10;">
+    <div class="card shadow border-0 rounded-pill p-2 mx-auto" style="max-width: 900px;">
+        <div class="card-body p-1">
+            <form asp-action="Index" method="get" class="row g-2 align-items-center">
+
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-0 text-primary">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" name="searchString" value="@ViewData["CurrentFilter"]"
+                               class="form-control border-0" placeholder="Search Brand, Model or Showroom..." />
+                    </div>
+                </div>
+
+                <div class="col-md-4 border-start px-4">
+                    <label class="form-label text-muted small fw-bold mb-0">
+                        Max Price: <span id="priceLabel" class="text-primary">
+                            @(ViewData["CurrentPrice"] != null ? Convert.ToDecimal(ViewData["CurrentPrice"]).ToString("N0") : ViewBag.GlobalMaxPrice.ToString("N0"))
+                        </span> EGP
+                    </label>
+
+                    <input type="range" class="form-range" name="maxPrice"
+                           min="@ViewBag.GlobalMinPrice"
+                           max="@ViewBag.GlobalMaxPrice"
+                           step="1000"
+                           value="@(ViewData["CurrentPrice"] ?? ViewBag.GlobalMaxPrice)"
+                           oninput="document.getElementById('priceLabel').innerText = Number(this.value).toLocaleString();">
+
+                    <div class="d-flex justify-content-between text-muted" style="font-size: 0.7rem;">
+                        <span>@ViewBag.GlobalMinPrice.ToString("N0")</span>
+                        <span>@ViewBag.GlobalMaxPrice.ToString("N0")</span>
+                    </div>
+                </div>
+
+                <div class="col-md-3 text-end">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Search</button>
+                    @if (ViewData["CurrentFilter"] != null || ViewData["CurrentPrice"] != null)
+                    {
+                        <a asp-action="Index" class="btn btn-light rounded-circle text-danger" title="Reset">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<br />
+
+<div class="container">
+    @if (Model.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            @foreach (var bike in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow border-0 hover-effect">
+                        <div style="height: 220px; overflow: hidden; background-color: #fff;" class="position-relative">
+                            @if (!string.IsNullOrEmpty(bike.ImageUrl))
+                            {
+                                <img src="~/images/motorcycles/@bike.ImageUrl" class="card-img-top" style="object-fit: contain; width: 100%; height: 100%;" alt="@bike.Model">
+                            }
+                            else
+                            {
+                                <img src="https://via.placeholder.com/300x200?text=No+Image" class="card-img-top" alt="No Image">
+                            }
+
+                            <span class="position-absolute top-0 end-0 bg-danger text-white px-3 py-1 m-2 rounded-pill fw-bold">
+                                @bike.Price.ToString("C0")
+                            </span>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h5 class="card-title fw-bold mb-0">@bike.Brand @bike.Model</h5>
+                                    <small class="text-muted"><i class="bi bi-shop"></i> @bike.Showroom?.Name</small>
+                                </div>
+                            </div>
+
+                            <p class="card-text text-secondary text-truncate">@bike.Description</p>
+                        </div>
+
+                        <div class="card-footer bg-white border-top-0">
+                            <div class="d-grid gap-2">
+                                <a asp-action="Details" asp-route-id="@bike.Id" class="btn btn-outline-info">
+                                    <i class="bi bi-eye-fill"></i> Details
+                                </a>
+
+                                @if (bike.Showroom != null && bike.Showroom.VendorId == currentUserId)
+                                {
+                                    <button class="btn btn-secondary w-100" disabled>
+                                        <i class="bi bi-person-badge"></i> Your Product
+                                    </button>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-action="AddToCart" asp-route-motorcycleId="@bike.Id">
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="bi bi-cart-plus"></i> Add to Cart
+                                        </button>
+                                    </form>
+                                }
+
+                                @if (User.IsInRole(Store.Utility.StaticDetails.Role_Admin))
+                                {
+                                    <div class="d-flex gap-1 mt-2">
+                                        <a asp-controller="Motorcycle" asp-action="Edit" asp-route-id="@bike.Id" class="btn btn-warning btn-sm flex-fill">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </a>
+                                        <a onclick="Delete('/Motorcycle/Delete/@bike.Id')" class="btn btn-danger btn-sm text-white flex-fill" style="cursor:pointer">
+                                            <i class="bi bi-trash-fill"></i> Delete
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center mt-5 mb-5">
+            <div class="mb-3">
+                <i class="bi bi-search text-muted" style="font-size: 4rem; opacity: 0.5;"></i>
+            </div>
+            <h3 class="text-secondary fw-bold">Oops! No motorcycles found.</h3>
+            <p class="text-muted">
+                We couldn't find any match for "<strong>@ViewData["CurrentFilter"]</strong>".<br>
+                Try checking your spelling or use general keywords like "Yamaha" or "Honda".
+            </p>
+            <a asp-action="Index" class="btn btn-primary rounded-pill px-4 mt-2">
+                <i class="bi bi-arrow-counterclockwise"></i> Show All Motorcycles
+            </a>
+        </div>
+    }
+</div>
+
+<style>
+    .hover-effect {
+        transition: transform 0.3s ease;
+    }
+
+        .hover-effect:hover {
+            transform: translateY(-5px);
+        }
+</style>
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function Delete(url) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        success: function (data) {
+                            if (data.success) {
+                                Swal.fire(
+                                    'Deleted!',
+                                    data.message,
+                                    'success'
+                                ).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    data.message,
+                                    'error'
+                                );
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire(
+                                'System Error!',
+                                'Something went wrong. check console for details.',
+                                'error'
+                            );
+                            console.log(xhr.responseText);
+                        }
+                    })
+                }
+            })
+        }
+    </script>
+}

@@ -1,0 +1,87 @@
+﻿@model Store.ViewModels.InquiryVM
+
+@{
+    ViewData["Title"] = "Inquiry Details";
+}
+
+<div class="container mt-4">
+    <div class="card shadow border-0 mb-4">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-file-text"></i> Inquiry Details #@Model.InquiryHeader.Id</h5>
+            <a asp-action="Index" class="btn btn-sm btn-light">Back to Inbox</a>
+        </div>
+
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5 class="text-primary border-bottom pb-2">Customer Info</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Full Name:</dt>
+                        <dd class="col-sm-8">@Model.InquiryHeader.FullName</dd>
+
+                        <dt class="col-sm-4">Phone:</dt>
+                        <dd class="col-sm-8 fw-bold">@Model.InquiryHeader.PhoneNumber</dd>
+
+                        <dt class="col-sm-4">Email:</dt>
+                        <dd class="col-sm-8">@Model.InquiryHeader.Email</dd>
+
+                        <dt class="col-sm-4">Date:</dt>
+                        <dd class="col-sm-8">@Model.InquiryHeader.InquiryDate.ToShortDateString()</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <h5 class="text-primary border-bottom pb-2">Requested Items</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 100px;">Image</th>
+                            <th>Motorcycle</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.InquiryDetails)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.Motorcycle.ImageUrl))
+                                    {
+                                        <img src="~/images/motorcycles/@item.Motorcycle.ImageUrl" class="img-fluid rounded" style="max-height: 60px;" />
+                                    }
+                                </td>
+                                <td>
+                                    <strong>@item.Motorcycle.Brand @item.Motorcycle.Model</strong>
+                                    <p class="text-muted small mb-0">@item.Motorcycle.Description</p>
+                                </td>
+                                <td>@item.Motorcycle.Price.ToString("C0")</td>
+                                <td class="text-center fw-bold">@item.Count</td>
+                                <td class="fw-bold text-success">
+                                    @((item.Motorcycle.Price * item.Count).ToString("C0"))
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-footer bg-white">
+            @{
+                var phone = Model.InquiryHeader.PhoneNumber?.Replace(" ", "").Replace("-", "").Replace("+", "");
+
+                var firstBike = Model.InquiryDetails.FirstOrDefault()?.Motorcycle.Brand + " " + Model.InquiryDetails.FirstOrDefault()?.Motorcycle.Model;
+                var message = $"Hello {Model.InquiryHeader.FullName}, I received your inquiry regarding the {firstBike}. How can I help you?";
+
+                var whatsappUrl = $"https://wa.me/{phone}?text={Uri.EscapeDataString(message)}";
+            }
+
+            <a href="@whatsappUrl" target="_blank" class="btn btn-success w-100 fw-bold">
+                <i class="bi bi-whatsapp"></i> Contact Customer via WhatsApp
+            </a>
+        </div>
+    </div>
+</div>

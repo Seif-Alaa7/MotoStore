@@ -1,0 +1,134 @@
+﻿@model Store.ViewModels.InquiryVM
+
+@{
+    ViewData["Title"] = "Inquiry Details";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="text-primary">Inquiry Details <small class="text-muted">#@Model.InquiryHeader.Id</small></h3>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Back to Inbox
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-person-lines-fill"></i> Customer Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Full Name</label>
+                            <input type="text" class="form-control" value="@Model.InquiryHeader.FullName" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Phone Number</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" value="@Model.InquiryHeader.PhoneNumber" readonly />
+                                <a href="tel:@Model.InquiryHeader.PhoneNumber" class="btn btn-success">
+                                    <i class="bi bi-telephone-fill"></i> Call
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Email</label>
+                            <input type="text" class="form-control" value="@Model.InquiryHeader.Email" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Date</label>
+                            <input type="text" class="form-control" value="@Model.InquiryHeader.InquiryDate.ToShortDateString()" readonly />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-cart-check-fill"></i> Requested Items</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var detail in Model.InquiryDetails)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0 text-primary">@detail.Motorcycle.Brand @detail.Motorcycle.Model</h6>
+                                    <small class="text-muted">Qty: 1</small>
+                                </div>
+                                <span class="fw-bold">@detail.Motorcycle.Price.ToString("c")</span>
+                            </li>
+                        }
+
+                        <li class="list-group-item d-flex justify-content-between bg-light">
+                            <strong>TOTAL (Approx)</strong>
+                            <strong class="text-success">
+                                @Model.InquiryDetails.Sum(x => x.Motorcycle.Price).ToString("c")
+                            </strong>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-white text-center border-0 mt-3">
+                    <a onclick="DeleteInquiry('/Inquiry/DeleteInquiry/@Model.InquiryHeader.Id')" class="btn btn-danger w-100 py-2" style="cursor:pointer">
+                        <i class="bi bi-trash-fill"></i> Delete Inquiry
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function DeleteInquiry(url) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        success: function (data) {
+                            if (data.success) {
+                                Swal.fire(
+                                    'Deleted!',
+                                    data.message,
+                                    'success'
+                                ).then(() => {
+                                    window.location.href = '/Inquiry/Index';
+                                });
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    data.message,
+                                    'error'
+                                );
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire(
+                                'System Error!',
+                                'Something went wrong. Status: ' + xhr.status + ' - ' + error,
+                                'error'
+                            );
+                        }
+                    })
+                }
+            })
+        }
+    </script>
+}

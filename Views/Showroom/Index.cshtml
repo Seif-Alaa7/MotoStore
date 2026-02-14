@@ -1,0 +1,121 @@
+﻿@model IEnumerable<Store.Models.Showroom>
+
+@{
+    ViewData["Title"] = "Showrooms List";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Showrooms List</h2>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add New Showroom
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No showrooms found. Be the first to add one!
+        </div>
+    }
+    else
+    {
+        <table class="table table-bordered table-hover table-striped align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Logo</th>
+                    <th>Showroom Name</th>
+                    <th>Address</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(item.LogoUrl))
+                            {
+                                <img src="~/images/showrooms/@item.LogoUrl" style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px;" />
+                            }
+                            else
+                            {
+                                <span class="text-muted">No Logo</span>
+                            }
+                        </td>
+                        <td>@item.Name</td>
+                        <td>@item.Address</td>
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                @if (User.IsInRole(Store.Utility.StaticDetails.Role_Admin) || User.IsInRole(Store.Utility.StaticDetails.Role_Vendor))
+                                {
+                                    <a asp-controller="Showroom" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning mx-1" title="Edit">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
+
+                                    <a onclick="Delete('/Showroom/Delete/@item.Id')" class="btn btn-danger mx-1" style="cursor:pointer" title="Delete">
+                                        <i class="bi bi-trash-fill"></i> Delete
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">View Only</span>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function Delete(url) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this! All motorcycles in this showroom will also be deleted.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        success: function (data) {
+                            if (data.success) {
+                                Swal.fire(
+                                    'Deleted!',
+                                    data.message,
+                                    'success'
+                                ).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    data.message,
+                                    'error'
+                                );
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire(
+                                'System Error!',
+                                'Something went wrong.',
+                                'error'
+                            );
+                        }
+                    })
+                }
+            })
+        }
+    </script>
+}

@@ -1,0 +1,117 @@
+﻿@model Store.Models.ShoppingCart
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Details";
+}
+@{
+    var currentUserId = UserManager.GetUserId(User);
+}
+
+<form method="post">
+    <input hidden asp-for="MotorcycleId" />
+
+    <div class="container mt-5">
+        <div class="card shadow-lg border-0">
+            <div class="row g-0">
+                <div class="col-md-6 bg-light d-flex flex-column align-items-center justify-content-center p-3">
+
+                    @if (!string.IsNullOrEmpty(Model.Motorcycle.ImageUrl))
+                    {
+                        <img src="~/images/motorcycles/@Model.Motorcycle.ImageUrl" class="img-fluid rounded shadow-sm" style="max-height: 400px;" />
+                    }
+                    else
+                    {
+                        <img src="https://via.placeholder.com/500x400" class="img-fluid" />
+                    }
+
+                    @if (ViewBag.GalleryImages != null && ((List<Store.Models.MotorcycleImage>)ViewBag.GalleryImages).Count > 0)
+                    {
+                        <div class="card mt-3 border-0 w-100 shadow-sm">
+                            <div class="card-header bg-white text-primary fw-bold border-bottom-0">
+                                <i class="bi bi-images"></i> More Photos
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+                                    <div class="carousel-inner">
+                                        @{
+                                            int i = 0;
+                                            var images = (List<Store.Models.MotorcycleImage>)ViewBag.GalleryImages;
+                                        }
+                                        @foreach (var img in images)
+                                        {
+                                            <div class="carousel-item @(i == 0 ? "active" : "")">
+                                                <img src="~/images/motorcycles/gallery/@System.IO.Path.GetFileName(img.ImageUrl)" class="d-block w-100 rounded" style="height: 250px; object-fit: cover;" alt="Gallery Image">
+                                            </div>
+                                            i++;
+                                        }
+                                    </div>
+
+                                    @if (images.Count > 1)
+                                    {
+                                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Previous</span>
+                                        </button>
+                                        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Next</span>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="card-title fw-bold text-primary mb-0">@Model.Motorcycle.Brand @Model.Motorcycle.Model</h2>
+                            <span class="badge bg-warning text-dark">@Model.Motorcycle.Showroom?.Name</span>
+                        </div>
+
+                        <h3 class="text-success fw-bold mb-4">@Model.Motorcycle.Price.ToString("C0")</h3>
+                        <p class="card-text text-muted">@Model.Motorcycle.Description</p>
+
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Quantity:</label>
+                                <input asp-for="Count" type="number" class="form-control" min="1" max="10" />
+                                <span asp-validation-for="Count" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-block">
+
+                            @if (Model.Motorcycle.Showroom != null && Model.Motorcycle.Showroom.VendorId == currentUserId)
+                            {
+                                <button class="btn btn-warning btn-lg px-4 me-2" disabled>
+                                    <i class="bi bi-person-badge"></i> Your Product
+                                </button>
+                            }
+                            else if (Model.Motorcycle.StockQuantity > 0)
+                            {
+                                <button type="submit" class="btn btn-primary btn-lg px-4 me-2">
+                                    Add to Cart
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secondary btn-lg px-4 me-2" disabled>Out of Stock</button>
+                            }
+
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg px-4">Back to List</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
