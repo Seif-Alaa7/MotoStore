@@ -4,6 +4,7 @@ namespace Store.Repositories
 {
     public interface IUnitOfWork
     {
+        IRepository<ApplicationUser> ApplicationUser { get; }
         IRepository<Showroom> Showroom { get; }
         IRepository<Motorcycle> Motorcycle { get; }
         IRepository<InquiryHeader> InquiryHeader { get; }

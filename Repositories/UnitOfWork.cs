@@ -7,6 +7,7 @@ namespace Store.Repositories
     {
         private readonly ApplicationDbContext _db;
 
+        public IRepository<ApplicationUser> ApplicationUser { get; private set; }
         public IRepository<Showroom> Showroom { get; private set; }
         public IRepository<Motorcycle> Motorcycle { get; private set; }
         public IRepository<InquiryHeader> InquiryHeader { get; private set; }
@@ -23,6 +24,7 @@ namespace Store.Repositories
             InquiryDetail = new Repository<InquiryDetail>(_db);
             ShoppingCart = new Repository<ShoppingCart>(_db);
             MotorcycleImage = new Repository<MotorcycleImage>(_db);
+            ApplicationUser = new Repository<ApplicationUser>(_db);
         }
 
         public void Save()

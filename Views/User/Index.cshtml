@@ -1,0 +1,160 @@
+﻿@model List<Store.ViewModels.UserVM>
+@using Store.Utility
+
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="container p-3">
+    <div class="row pt-4 mb-3">
+        <div class="col-12">
+            <h2 class="text-primary fw-bold"><i class="bi bi-people-fill me-2"></i>User Management</h2>
+            <p class="text-muted">Manage roles, access, and clean up database records.</p>
+        </div>
+    </div>
+
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-uppercase text-muted small">
+                    <tr>
+                        <th class="px-4 py-3">User Info</th>
+                        <th>PhoneNumber</th>
+                        <th>Role Management</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end px-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var obj in Model)
+                    {
+                        <tr>
+                            <td class="px-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                                        <i class="bi bi-person-fill fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">@obj.Name</div>
+                                        <div class="text-muted small">@obj.Email</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>@obj.PhoneNumber</td>
+                            <td style="width: 200px;">
+                                <select onchange="changeRole('@obj.Id', this.value, '@obj.Role')" class="form-select form-select-sm border-0 bg-light fw-semibold shadow-sm">
+                                    <option value="@StaticDetails.Role_Admin" selected="@(obj.Role == StaticDetails.Role_Admin)">Admin</option>
+                                    <option value="@StaticDetails.Role_Vendor" selected="@(obj.Role == StaticDetails.Role_Vendor)">Vendor</option>
+                                    <option value="@StaticDetails.Role_Customer" selected="@(obj.Role == StaticDetails.Role_Customer)">Customer</option>
+                                </select>
+                            </td>
+
+                            <td class="text-center">
+                                @if (obj.LockoutEnd != null && obj.LockoutEnd > DateTime.Now)
+                                {
+                                    <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2">Locked</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">Active</span>
+                                }
+                            </td>
+                            <td class="text-end px-4">
+                                @if (obj.LockoutEnd != null && obj.LockoutEnd > DateTime.Now)
+                                {
+                                    <a asp-action="LockUnlock" asp-route-id="@obj.Id" class="btn btn-sm btn-outline-success rounded-3 me-1" title="Unlock">
+                                        <i class="bi bi-unlock-fill"></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a asp-action="LockUnlock" asp-route-id="@obj.Id" class="btn btn-sm btn-outline-warning rounded-3 me-1" title="Lock">
+                                        <i class="bi bi-lock-fill"></i>
+                                    </a>
+                                }
+
+                                <a onclick="Delete('/User/Delete/@obj.Id', '@obj.Role')" class="btn btn-sm btn-outline-danger rounded-3 ms-2" title="Delete">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function Delete(url, role) {
+            let warningText = "";
+
+            if (role === '@StaticDetails.Role_Vendor') {
+                warningText = "You are deleting a VENDOR! This will permanently delete their Showroom, All Motorcycles, and related Orders.";
+            } else if (role === '@StaticDetails.Role_Admin') {
+                warningText = "You are deleting an ADMIN! Ensure this is intentional.";
+            } else {
+                warningText = "This will delete the Customer account and their Order history.";
+            }
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: warningText,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        success: function (data) {
+                            if (data.success) {
+                                Swal.fire('Deleted!', data.message, 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error!', data.message, 'error');
+                            }
+                        }
+                    })
+                }
+            })
+        }
+
+        function changeRole(userId, newRole, oldRole) {
+            let confirmMsg = `Change role to ${newRole}?`;
+
+            if (oldRole === '@StaticDetails.Role_Vendor' && newRole !== '@StaticDetails.Role_Vendor') {
+                confirmMsg = "Warning: Downgrading a Vendor will DELETE their Showroom and Motorcycles! Continue?";
+            }
+
+            Swal.fire({
+                title: 'Change Role?',
+                text: confirmMsg,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, change it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/User/ChangeRole', { userId: userId, newRole: newRole }, function (data) {
+                        if (data.success) {
+                            Swal.fire('Updated!', data.message, 'success').then(() => location.reload());
+                        } else {
+                            Swal.fire('Error!', data.message, 'error');
+                            location.reload();
+                        }
+                    });
+                } else {
+                    location.reload();
+                }
+            })
+        }
+    </script>
+}

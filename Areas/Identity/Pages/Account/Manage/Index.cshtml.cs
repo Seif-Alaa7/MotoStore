@@ -51,6 +51,8 @@ namespace Store.Areas.Identity.Pages.Account.Manage
 
             [Phone]
             [Display(Name = "Phone number")]
+            [RegularExpression(@"^01[0125][0-9]{8}$", ErrorMessage = "Invalid Egyptian phone number (must start with 01 and contain 11 digits)")]
+
             public string PhoneNumber { get; set; }
         }
 

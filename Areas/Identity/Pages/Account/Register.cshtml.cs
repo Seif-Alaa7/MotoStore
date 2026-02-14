@@ -70,6 +70,11 @@ namespace Store.Areas.Identity.Pages.Account
             [RegularExpression(@"^[\u0600-\u06FFa-zA-Z\s]+$", ErrorMessage = "Name must contain letters only (No numbers or symbols)")]
             public string LastName { get; set; }
 
+            [Required(ErrorMessage = "Please enter your Phone Number")]
+            [Display(Name = "Phone Number")]
+            [RegularExpression(@"^01[0125][0-9]{8}$", ErrorMessage = "Invalid Egyptian phone number (must start with 01 and contain 11 digits)")]
+            public string PhoneNumber { get; set; }
+
             [Required]
             [EmailAddress]
             [Display(Name = "Email")]
@@ -137,6 +142,7 @@ namespace Store.Areas.Identity.Pages.Account
 
                 user.FirstName = Input.FirstName;
                 user.LastName = Input.LastName;
+                user.PhoneNumber = Input.PhoneNumber;
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
